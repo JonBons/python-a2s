@@ -82,6 +82,25 @@ class SourceInfo(metaclass=DataclsMeta):
     """Game ID for games that have an app ID too high for 16bit."""
     game_id: int
 
+    battleye: str
+    required_version: str
+    required_build_no: str
+    state_num: int
+    difficulty: str
+    equal_mod_required: str
+    is_locked: bool
+    verify_signatures: str
+    dedicated: str
+    game_type: str
+    language: str
+    long_at: str
+    loaded_content_hash: str
+    country: str
+    time_left: str
+    param1: str
+    param2: str
+    allowed_file_patching: str
+
     # Client determined values:
     """Round-trip delay time for the request in seconds"""
     ping: float
@@ -209,6 +228,38 @@ def parse_source(reader):
         resp.stv_name = reader.read_cstring()
     if resp.has_keywords:
         resp.keywords = reader.read_cstring()
+
+        if resp.folder == "Arma3":
+            keywords_split = resp.keywords.split(",")
+            keyword_dict = {}
+
+            for tag in keywords_split:
+                if len(tag) > 1:
+                    keyword_dict[tag[0]] = tag[1:]
+
+            resp.battleye = keyword_dict.get('b', 't')
+            resp.required_version = keyword_dict.get('r', '198')
+            resp.required_build_no = keyword_dict.get('n', '0')
+            resp.state_num = int(keyword_dict.get('s', '1'))
+            resp.difficulty = keyword_dict.get('i', '3')
+            resp.equal_mod_required = keyword_dict.get('m','f')
+            if keyword_dict.get('l','f') == "t":
+                resp.is_locked = True
+            else:
+                resp.is_locked = False
+            resp.verify_signatures = keyword_dict.get('v','t')
+            resp.dedicated = keyword_dict.get('d','t')
+            resp.game_type = keyword_dict.get('t','coop')
+            resp.language = keyword_dict.get('g','65545')
+            resp.long_at = keyword_dict.get('c','')
+            resp.platform = keyword_dict.get('p','w')
+            resp.loaded_content_hash = keyword_dict.get('h','281d1fec')
+            resp.country = keyword_dict.get('o','CA')
+            resp.time_left = keyword_dict.get('e','0')
+            resp.param1 = keyword_dict.get('j','')
+            resp.param2 = keyword_dict.get('k','')
+            resp.allowed_file_patching = keyword_dict.get('f','1')
+
     if resp.has_game_id:
         resp.game_id = reader.read_uint64()
 
